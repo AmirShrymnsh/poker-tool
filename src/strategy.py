@@ -1,12 +1,16 @@
 from hand_evaluation import evaluate_hand_strength
 from pypokerengine.utils.card_utils import gen_cards, estimate_hole_card_win_rate
+from pypokerengine.engine.card import Card
 
 NB_SIMULATION = 1000
 
 def give_advice(player_hand, community_cards, game_stage, opponent_actions):
     hand_strength = evaluate_hand_strength(player_hand, community_cards)
+    print(f"Hand Strength: {hand_strength}")  # Debug statement
     winning_percentage = calculate_winning_percentage(player_hand, community_cards)
+    print(f"Winning Percentage: {winning_percentage}")  # Debug statement
     opponent_is_bluffing = detect_bluff(opponent_actions)
+    print(f"Opponent Bluffing: {opponent_is_bluffing}")  # Debug statement
 
     if game_stage == 'pre-flop':
         advice = pre_flop_strategy(player_hand, opponent_is_bluffing)
@@ -54,9 +58,16 @@ def river_strategy(hand_strength, winning_percentage, opponent_is_bluffing, oppo
 
 def calculate_winning_percentage(player_hand, community_cards):
     # Ensure cards are in the correct format
-    hole_cards = gen_cards([card.upper() for card in player_hand])
-    community = gen_cards([card.upper() for card in community_cards])
-    return estimate_hole_card_win_rate(nb_simulation=NB_SIMULATION, nb_player=2, hole_card=hole_cards, community_card=community)
+    try:
+        # Convert cards to expected format by pypokerengine
+        hole_cards = [Card.from_str(card) for card in player_hand]
+        community = [Card.from_str(card) for card in community_cards]
+        print(f"Hole Cards: {hole_cards}")  # Debug statement
+        print(f"Community Cards: {community}")  # Debug statement
+        return estimate_hole_card_win_rate(nb_simulation=NB_SIMULATION, nb_player=2, hole_card=hole_cards, community_card=community)
+    except Exception as e:
+        print(f"Error in calculate_winning_percentage: {e}")  # Debug statement
+        return 0
 
 def detect_bluff(opponent_actions):
     # Simplified bluff detection logic: Assume an opponent might be bluffing if they raise often
